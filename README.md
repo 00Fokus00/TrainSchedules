@@ -1,3 +1,3 @@
-![EditSchedules](EditSchedules.png)
+![EditSchedule](EditSchedule.png)
 ![RailwayScheduleSystem](RailwaySchedulesSystem.png)
 ![StationEntries](StationEntries.png)
