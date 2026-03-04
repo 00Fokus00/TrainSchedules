@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Details</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<div th:insert="~{fragments/navbar :: navbar}"></div>
+
+<!-- Main Content -->
+<div class="container flex-grow-1">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-geo-alt"></i> Station Details</h1>
+        <div>
+            <a th:href="@{'/stations/' + ${station.id} + '/edit'}"
+               class="btn btn-warning me-2">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="/stations" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <tr>
+                    <th width="20%">ID:</th>
+                    <td th:text="${station.id}">1</td>
+                </tr>
+                <tr>
+                    <th>Name:</th>
+                    <td th:text="${station.name}">Station Name</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-4" th:if="${trains != null and not #lists.isEmpty(trains)}">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-list"></i> Station Entries</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Number</th>
+                        <th>Max Speed</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${trains}">
+                        <td>
+                            <span class="badge bg-secondary" th:text="${entry.id}">1</span>
+                        </td>
+                        <td>
+                            <span th:if="${entry != null}">
+                                <a th:href="@{'/trains/' + ${entry.id}}"
+                                   class="text-decoration-none">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span th:text="${entry.number}">Station Name</span>
+                                </a>
+                            </span>
+                            <span th:unless="${entry.number != null}" class="text-muted">
+                                Not set
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${entry.maxSpeed != null}">
+                                <span th:text="${entry.maxSpeed}">1</span>
+                            </span>
+                            <span th:unless="${entry.maxSpeed != null}" class="text-muted">
+                                —
+                            </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty Trains Entries State -->
+    <div class="card mt-4" th:unless="${trains != null and not #lists.isEmpty(trains)}">
+        <div class="card-body text-center">
+            <i class="bi bi-geo-alt display-1 text-muted"></i>
+            <h5 class="mt-3">No Train Entries</h5>
+            <p class="text-muted">This station doesn't have any trains entries yet.</p>
+            <a th:href="@{'/station-entries/new?stationId=' + ${station.id}}"
+               class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Station Entry
+            </a>
+        </div>
+    </div>
+
+    <!-- Delete Section -->
+    <div class="card border-danger mt-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{'/stations/' + ${station.id} + '/delete'}" method="post">
+                <button type="submit" class="btn btn-danger"
+                        onclick="return confirm('Delete this station permanently?')">
+                    <i class="bi bi-trash"></i> Delete Station
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white mt-auto py-3">
+    <div th:insert="~{fragments/footer :: footer}"></div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

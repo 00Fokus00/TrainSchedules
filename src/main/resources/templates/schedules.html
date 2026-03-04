@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedules</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+<div th:insert="~{fragments/navbar :: navbar}"></div>
+
+<!-- Main Content -->
+<div class="container flex-grow-1">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-calendar-event"></i> Schedules</h1>
+        <a href="/schedules/new" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Schedule
+        </a>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/schedules}" method="get" class="row g-3 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label">Train</label>
+                    <select class="form-select" name="trainId">
+                        <option value="">-- All Trains --</option>
+                        <option th:each="train : ${trains}"
+                                th:value="${train.id}"
+                                th:text="${train.number}"
+                                th:selected="${trainId != null && trainId == train.id}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Departure Time</label>
+                    <div class="row g-2">
+                        <div class="col">
+                            <input type="datetime-local" class="form-control" name="departureFrom"
+                                   th:value="${departureFrom}">
+                        </div>
+                        <div class="col-auto d-flex align-items-center">
+                            <span class="text-muted">—</span>
+                        </div>
+                        <div class="col">
+                            <input type="datetime-local" class="form-control" name="departureTo"
+                                   th:value="${departureTo}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Arrival Time</label>
+                    <div class="row g-2">
+                        <div class="col">
+                            <input type="datetime-local" class="form-control" name="arrivalFrom"
+                                   th:value="${arrivalFrom}">
+                        </div>
+                        <div class="col-auto d-flex align-items-center">
+                            <span class="text-muted">—</span>
+                        </div>
+                        <div class="col">
+                            <input type="datetime-local" class="form-control" name="arrivalTo"
+                                   th:value="${arrivalTo}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-1 d-flex align-items-end">
+                    <div class="d-flex flex-column w-100">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            <a th:href="@{/schedules}"
+                               class="btn btn-outline-secondary"
+                               th:if="${trainId != null or !#strings.isEmpty(departureFrom) or !#strings.isEmpty(departureTo) or !#strings.isEmpty(arrivalFrom) or !#strings.isEmpty(arrivalTo)}">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Скрытые поля для сохранения сортировки при поиске -->
+                <input type="hidden" name="sortBy" th:value="${sortBy}">
+                <input type="hidden" name="direction" th:value="${direction}">
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    <div th:if="${totalItems > 0}" class="alert alert-info mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                Showing <strong th:text="${schedules.size()}">0</strong> of <strong th:text="${totalItems}">0</strong> schedules
+                <span th:if="${trainId != null}">
+                    for train <strong th:text="${selectedTrain != null ? selectedTrain.number : trainId}"></strong>
+                </span>
+            </div>
+            <div class="col-md-6 text-end">
+                Page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">1</strong>
+                | Sorted by:
+                <span th:switch="${sortBy}">
+                    <span th:case="'id'">ID</span>
+                    <span th:case="'departureTime'">Departure Time</span>
+                    <span th:case="'arrivalTime'">Arrival Time</span>
+                    <span th:case="'train.number'">Train Number</span>
+                </span>
+                (<span th:text="${direction}">asc</span>)
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${totalItems == 0}" class="alert alert-warning mb-3">
+        No schedules found
+        <span th:if="${trainId != null or !#strings.isEmpty(departureFrom) or !#strings.isEmpty(departureTo) or !#strings.isEmpty(arrivalFrom) or !#strings.isEmpty(arrivalTo)}">
+            for the current filters
+        </span>
+    </div>
+
+    <!-- Schedules Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>
+                            <a th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=0, sortBy='id', direction=${(sortBy == 'id' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                ID
+                                <span th:if="${sortBy == 'id'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'id'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th>
+                            <a th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=0, sortBy='train.number', direction=${(sortBy == 'train.number' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                Train
+                                <span th:if="${sortBy == 'train.number'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'train.number'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th>
+                            <a th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=0, sortBy='departureTime', direction=${(sortBy == 'departureTime' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                Departure
+                                <span th:if="${sortBy == 'departureTime'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'departureTime'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th>
+                            <a th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=0, sortBy='arrivalTime', direction=${(sortBy == 'arrivalTime' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                Arrival
+                                <span th:if="${sortBy == 'arrivalTime'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'arrivalTime'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th>Duration</th>
+                        <th>Stations</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="schedule : ${schedules}">
+                        <td th:text="${schedule.id}">1</td>
+                        <td>
+                            <span th:if="${schedule.train != null}">
+                                <a th:href="@{'/trains/' + ${schedule.train.id}}"
+                                   class="text-decoration-none">
+                                    <i class="bi bi-train-front"></i>
+                                    <span th:text="${schedule.train.number}">T001</span>
+                                </a>
+                            </span>
+                            <span th:unless="${schedule.train != null}" class="text-muted">
+                                Not set
+                            </span>
+                        </td>
+                        <td>
+                            <span th:text="${#temporals.format(schedule.departureTime, 'yyyy-MM-dd HH:mm')}">2023-01-01 10:00</span>
+                        </td>
+                        <td>
+                            <span th:text="${#temporals.format(schedule.arrivalTime, 'yyyy-MM-dd HH:mm')}">2023-01-01 18:00</span>
+                        </td>
+                        <td>
+                            <span th:if="${schedule.departureTime != null and schedule.arrivalTime != null}">
+                                <th:block th:with="duration=${T(java.time.Duration).between(schedule.departureTime, schedule.arrivalTime)}">
+                                    <span th:text="${duration.toHours()} + 'h ' + ${duration.toMinutesPart()} + 'm'">
+                                        8h 0m
+                                    </span>
+                                </th:block>
+                            </span>
+                            <span th:unless="${schedule.departureTime != null and schedule.arrivalTime != null}">
+                                —
+                            </span>
+                        </td>
+                        <td>
+                            <span th:text="${schedule.stationEntries != null ? #lists.size(schedule.stationEntries) : 0}">0</span>
+                            <span th:if="${schedule.stationEntries != null and not #lists.isEmpty(schedule.stationEntries)}">
+                                <a th:href="@{'/schedules/' + ${schedule.id}}" class="badge bg-info ms-1">
+                                    View
+                                </a>
+                            </span>
+                        </td>
+                        <td class="text-end table-actions">
+                            <a th:href="@{'/schedules/' + ${schedule.id}}"
+                               class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            <a th:href="@{'/schedules/' + ${schedule.id} + '/edit'}"
+                               class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <form th:action="@{'/schedules/' + ${schedule.id} + '/delete'}"
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete this schedule? All related station entries will also be deleted.')">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div th:if="${totalPages > 1}">
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Previous Page -->
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=${currentPage - 1}, sortBy=${sortBy}, direction=${direction})}"
+                       aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- First Page -->
+                <li class="page-item" th:if="${startPage > 0}">
+                    <a class="page-link"
+                       th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=0, sortBy=${sortBy}, direction=${direction})}"
+                       th:text="1">1</a>
+                </li>
+
+                <!-- Ellipsis if needed -->
+                <li class="page-item disabled" th:if="${startPage > 1}">
+                    <span class="page-link">...</span>
+                </li>
+
+                <!-- Page Numbers -->
+                <li th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                    class="page-item"
+                    th:classappend="${pageNum == currentPage} ? 'active' : ''">
+                    <a class="page-link"
+                       th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=${pageNum}, sortBy=${sortBy}, direction=${direction})}"
+                       th:text="${pageNum + 1}">1</a>
+                </li>
+
+                <!-- Ellipsis if needed -->
+                <li class="page-item disabled" th:if="${endPage < totalPages - 2}">
+                    <span class="page-link">...</span>
+                </li>
+
+                <!-- Last Page -->
+                <li class="page-item" th:if="${endPage < totalPages - 1}">
+                    <a class="page-link"
+                       th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=${totalPages - 1}, sortBy=${sortBy}, direction=${direction})}"
+                       th:text="${totalPages}">10</a>
+                </li>
+
+                <!-- Next Page -->
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{/schedules(trainId=${trainId}, departureFrom=${departureFrom}, departureTo=${departureTo}, arrivalFrom=${arrivalFrom}, arrivalTo=${arrivalTo}, page=${currentPage + 1}, sortBy=${sortBy}, direction=${direction})}"
+                       aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white mt-auto py-3">
+    <div th:insert="~{fragments/footer :: footer}"></div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

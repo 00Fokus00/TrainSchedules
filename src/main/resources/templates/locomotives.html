@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Locomotives</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+<div th:insert="~{fragments/navbar :: navbar}"></div>
+
+<!-- Flash Messages-->
+<div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <i class="bi bi-check-circle"></i>
+    <span th:text="${successMessage}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    <i class="bi bi-exclamation-circle"></i>
+    <span th:text="${errorMessage}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<!-- Main Content -->
+<div class="container flex-grow-1">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-train"></i> Locomotives</h1>
+        <a href="/locomotives/new" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Locomotive
+        </a>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/locomotives}" method="get" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label">Model</label>
+                    <input type="text"
+                           class="form-control"
+                           name="search"
+                           th:value="${search}"
+                           placeholder="Enter model...">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Power (kW)</label>
+                    <div class="row g-2">
+                        <div class="col">
+                            <input type="number"
+                                   class="form-control"
+                                   name="minPower"
+                                   th:value="${minPower}"
+                                   placeholder="Min"
+                                   min="0">
+                        </div>
+                        <div class="col-auto d-flex align-items-center">
+                            <span class="text-muted">—</span>
+                        </div>
+                        <div class="col">
+                            <input type="number"
+                                   class="form-control"
+                                   name="maxPower"
+                                   th:value="${maxPower}"
+                                   placeholder="Max"
+                                   min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <input type="text"
+                           class="form-control"
+                           name="status"
+                           th:value="${status}"
+                           placeholder="Enter status...">
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="d-flex flex-column w-100">
+                        <!-- Скрытые поля для сохранения сортировки при поиске -->
+                        <input type="hidden" name="sortBy" th:value="${sortBy}">
+                        <input type="hidden" name="direction" th:value="${direction}">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                            <a th:href="@{/locomotives}"
+                               class="btn btn-outline-secondary"
+                               th:if="${!#strings.isEmpty(search) or minPower != null or maxPower != null or !#strings.isEmpty(status)}">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    <div th:if="${totalItems > 0}" class="alert alert-info mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                Showing <strong th:text="${locomotives.size()}">0</strong> of <strong th:text="${totalItems}">0</strong> locomotives
+                <span th:if="${!#strings.isEmpty(search) or minPower != null or maxPower != null or !#strings.isEmpty(status)}">
+                    for search:
+                    <span th:if="${!#strings.isEmpty(search)}">model "<strong th:text="${search}"></strong>"</span>
+                    <span th:if="${!#strings.isEmpty(search) and (minPower != null or maxPower != null or !#strings.isEmpty(status))}"> and </span>
+                    <span th:if="${minPower != null or maxPower != null}">
+                        power
+                        <span th:if="${minPower != null}">
+                            from <strong th:text="${minPower}">0</strong>
+                        </span>
+                        <span th:if="${minPower != null and maxPower != null}"> to </span>
+                        <span th:if="${maxPower != null}">
+                            <strong th:text="${maxPower}">3000</strong>
+                        </span>
+                        <span th:if="${minPower == null and maxPower != null}">
+                            up to <strong th:text="${maxPower}">3000</strong>
+                        </span>
+                        kW
+                    </span>
+                    <span th:if="${(!#strings.isEmpty(search) or minPower != null or maxPower != null) and !#strings.isEmpty(status)}"> and </span>
+                    <span th:if="${!#strings.isEmpty(status)}">
+                        status "<strong th:text="${status}"></strong>"
+                    </span>
+                </span>
+            </div>
+            <div class="col-md-6 text-end">
+                Page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">1</strong>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${totalItems == 0}" class="alert alert-warning mb-3">
+        No locomotives found
+        <span th:if="${!#strings.isEmpty(search) or minPower != null or maxPower != null or !#strings.isEmpty(status)}">
+            for search:
+            <span th:if="${!#strings.isEmpty(search)}">model "<strong th:text="${search}"></strong>"</span>
+            <span th:if="${!#strings.isEmpty(search) and (minPower != null or maxPower != null or !#strings.isEmpty(status))}"> and </span>
+            <span th:if="${minPower != null or maxPower != null}">
+                power
+                <span th:if="${minPower != null}">
+                    from <strong th:text="${minPower}">0</strong>
+                </span>
+                <span th:if="${minPower != null and maxPower != null}"> to </span>
+                <span th:if="${maxPower != null}">
+                    <strong th:text="${maxPower}">3000</strong>
+                </span>
+                <span th:if="${minPower == null and maxPower != null}">
+                    up to <strong th:text="${maxPower}">3000</strong>
+                </span>
+                kW
+            </span>
+            <span th:if="${(!#strings.isEmpty(search) or minPower != null or maxPower != null) and !#strings.isEmpty(status)}"> and </span>
+            <span th:if="${!#strings.isEmpty(status)}">
+                status "<strong th:text="${status}"></strong>"
+            </span>
+        </span>
+    </div>
+
+    <!-- Locomotives Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>
+                            <a th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=0, sortBy='id', direction=${(sortBy == 'id' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                ID
+                                <span th:if="${sortBy == 'id'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'id'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th>
+                            <a th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=0, sortBy='model', direction=${(sortBy == 'model' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                Model
+                                <span th:if="${sortBy == 'model'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'model'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th>
+                            <a th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=0, sortBy='power', direction=${(sortBy == 'power' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                Power (kW)
+                                <span th:if="${sortBy == 'power'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'power'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th>
+                            <a th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=0, sortBy='status', direction=${(sortBy == 'status' && direction == 'asc') ? 'desc' : 'asc'})}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center">
+                                Status
+                                <span th:if="${sortBy == 'status'}" class="ms-1">
+                                    <i th:class="${direction == 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                </span>
+                                <span th:unless="${sortBy == 'status'}" class="ms-1 text-muted">
+                                    <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </a>
+                        </th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="locomotive : ${locomotives}">
+                        <td th:text="${locomotive.id}">1</td>
+                        <td th:text="${locomotive.model}">Model</td>
+                        <td>
+                            <span th:if="${locomotive.power != null}" th:text="${locomotive.power} + ' kW'">3000 kW</span>
+                            <span th:unless="${locomotive.power != null}" class="text-muted">Not set</span>
+                        </td>
+                        <td>
+                            <span th:if="${locomotive.status != null}"
+                                  th:class="${locomotive.status == 'Active' ? 'badge bg-success' : 'badge bg-secondary'}"
+                                  th:text="${locomotive.status}">Active</span>
+                            <span th:unless="${locomotive.status != null}" class="text-muted">Unknown</span>
+                        </td>
+                        <td class="text-end table-actions">
+                            <a th:href="@{'/locomotives/' + ${locomotive.id}}"
+                               class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            <a th:href="@{'/locomotives/' + ${locomotive.id} + '/edit'}"
+                               class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <form th:action="@{'/locomotives/' + ${locomotive.id} + '/delete'}"
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete locomotive?')">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div th:if="${totalPages > 1}">
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Previous Page -->
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=${currentPage - 1}, sortBy=${sortBy}, direction=${direction})}"
+                       aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- First Page -->
+                <li class="page-item" th:if="${startPage > 0}">
+                    <a class="page-link"
+                       th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=0, sortBy=${sortBy}, direction=${direction})}"
+                       th:text="1">1</a>
+                </li>
+
+                <!-- Ellipsis if needed -->
+                <li class="page-item disabled" th:if="${startPage > 1}">
+                    <span class="page-link">...</span>
+                </li>
+
+                <!-- Page Numbers -->
+                <li th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                    class="page-item"
+                    th:classappend="${pageNum == currentPage} ? 'active' : ''">
+                    <a class="page-link"
+                       th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=${pageNum}, sortBy=${sortBy}, direction=${direction})}"
+                       th:text="${pageNum + 1}">1</a>
+                </li>
+
+                <!-- Ellipsis if needed -->
+                <li class="page-item disabled" th:if="${endPage < totalPages - 2}">
+                    <span class="page-link">...</span>
+                </li>
+
+                <!-- Last Page -->
+                <li class="page-item" th:if="${endPage < totalPages - 1}">
+                    <a class="page-link"
+                       th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=${totalPages - 1}, sortBy=${sortBy}, direction=${direction})}"
+                       th:text="${totalPages}">10</a>
+                </li>
+
+                <!-- Next Page -->
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{/locomotives(search=${search}, minPower=${minPower}, maxPower=${maxPower}, status=${status}, page=${currentPage + 1}, sortBy=${sortBy}, direction=${direction})}"
+                       aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white mt-auto py-3">
+    <div th:insert="~{fragments/footer :: footer}"></div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
