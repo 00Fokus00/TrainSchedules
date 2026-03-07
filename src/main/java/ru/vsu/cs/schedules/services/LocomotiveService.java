@@ -2,6 +2,8 @@ package ru.vsu.cs.schedules.services;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,6 +41,7 @@ public class LocomotiveService {
         return locomotiveRepo.findAll(spec, pageable);
     }
 
+    @Cacheable(value = "locomotive:byId", key="#id")
     public Locomotive getById(Integer id) {
         return locomotiveRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Locomotive not found: " + id));
@@ -49,6 +52,7 @@ public class LocomotiveService {
         return locomotiveRepo.save(locomotive);
     }
 
+    @CacheEvict(value = "locomotive:byId", key = "#id")
     @Transactional
     public Locomotive update(Integer id, Locomotive locomotive) {
         Locomotive existing = locomotiveRepo.findById(id)

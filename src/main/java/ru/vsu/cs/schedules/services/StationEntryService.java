@@ -2,6 +2,8 @@ package ru.vsu.cs.schedules.services;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +44,7 @@ public class StationEntryService {
         return stationEntryRepo.findStationEntryByScheduleId(scheduleId, pageable);
     }
 
+    @Cacheable(value = "stationEntry:byId", key="#id")
     public StationEntry getById(Integer id) {
         return stationEntryRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("StationEntry not found: " + id));
@@ -71,6 +74,7 @@ public class StationEntryService {
         return savedEntry;
     }
 
+    @CacheEvict(value = "stationEntry:byId", key = "#id")
     @Transactional
     public StationEntry update(Integer id, StationEntry stationEntry) {
         StationEntry existing = stationEntryRepo.findById(id)

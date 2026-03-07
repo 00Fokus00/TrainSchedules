@@ -2,6 +2,8 @@ package ru.vsu.cs.schedules.services;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,6 +34,7 @@ public class TrainCarriageService {
         return trainCarriageRepo.findAll(spec, pageable);
     }
 
+    @Cacheable(value = "trainCarriage:byId", key="#id")
     public TrainCarriage getById(Integer id) {
         return trainCarriageRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("TrainCarriage not found: " + id));
@@ -42,6 +45,7 @@ public class TrainCarriageService {
         return trainCarriageRepo.save(trainCarriage);
     }
 
+    @CacheEvict(value = "trainCarriage:byId", key = "#id")
     @Transactional
     public TrainCarriage update(Integer id, TrainCarriage trainCarriage) {
         TrainCarriage existing = trainCarriageRepo.findById(id)

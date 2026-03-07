@@ -2,6 +2,8 @@ package ru.vsu.cs.schedules.services;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,6 +36,7 @@ public class ScheduleService {
         return scheduleRepo.findAll(spec, pageable);
     }
 
+    @Cacheable(value = "schedule:byId", key="#id")
     public Schedule getById(Integer id) {
         return scheduleRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Schedule not found: " + id));
@@ -44,6 +47,7 @@ public class ScheduleService {
         return scheduleRepo.save(schedule);
     }
 
+    @CacheEvict(value = "schedule:byId", key = "#id")
     @Transactional
     public Schedule update(Integer id, Schedule schedule) {
         Schedule existing = scheduleRepo.findById(id)
