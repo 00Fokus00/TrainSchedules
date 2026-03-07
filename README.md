@@ -6,6 +6,7 @@ REST API приложение для управления железнодоро
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-✓-green)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
 ![Docker](https://img.shields.io/badge/Docker-✓-blue)
+![Redis](https://img.shields.io/badge/Redis-%23DD0031.svg?logo=redis&logoColor=white)
 
 ## ✨ Функциональность
 
@@ -32,6 +33,7 @@ REST API приложение для управления железнодоро
 
 - **Backend:** Java 17, Spring Boot         
 - **База данных:** PostgreSQL 15
+- **Кэширование:** Redis
 - **Контейнеризация:** Docker, Docker Compose
 - **Сборка:** Maven
 ## Скриншоты
