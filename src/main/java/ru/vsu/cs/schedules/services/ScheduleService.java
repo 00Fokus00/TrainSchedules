@@ -36,7 +36,6 @@ public class ScheduleService {
         return scheduleRepo.findAll(spec, pageable);
     }
 
-    @Cacheable(value = "schedule:byId", key="#id")
     public Schedule getById(Integer id) {
         return scheduleRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Schedule not found: " + id));
@@ -47,7 +46,6 @@ public class ScheduleService {
         return scheduleRepo.save(schedule);
     }
 
-    @CacheEvict(value = "schedule:byId", key = "#id")
     @Transactional
     public Schedule update(Integer id, Schedule schedule) {
         Schedule existing = scheduleRepo.findById(id)
