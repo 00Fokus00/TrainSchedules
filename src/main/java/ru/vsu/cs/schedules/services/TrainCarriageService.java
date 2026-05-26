@@ -34,7 +34,7 @@ public class TrainCarriageService {
         return trainCarriageRepo.findAll(spec, pageable);
     }
 
-    @Cacheable(value = "trainCarriage:byId", key="#id")
+//    @Cacheable(value = "trainCarriage:byId", key="#id")
     public TrainCarriage getById(Integer id) {
         return trainCarriageRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("TrainCarriage not found: " + id));
@@ -45,7 +45,7 @@ public class TrainCarriageService {
         return trainCarriageRepo.save(trainCarriage);
     }
 
-    @CacheEvict(value = "trainCarriage:byId", key = "#id")
+//    @CacheEvict(value = "trainCarriage:byId", key = "#id")
     @Transactional
     public TrainCarriage update(Integer id, TrainCarriage trainCarriage) {
         TrainCarriage existing = trainCarriageRepo.findById(id)

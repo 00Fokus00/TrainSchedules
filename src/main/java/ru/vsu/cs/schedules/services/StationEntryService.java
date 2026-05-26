@@ -44,7 +44,7 @@ public class StationEntryService {
         return stationEntryRepo.findStationEntryByScheduleId(scheduleId, pageable);
     }
 
-    @Cacheable(value = "stationEntry:byId", key="#id")
+//    @Cacheable(value = "stationEntry:byId", key="#id")
     public StationEntry getById(Integer id) {
         return stationEntryRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("StationEntry not found: " + id));
@@ -74,7 +74,7 @@ public class StationEntryService {
         return savedEntry;
     }
 
-    @CacheEvict(value = "stationEntry:byId", key = "#id")
+//    @CacheEvict(value = "stationEntry:byId", key = "#id")
     @Transactional
     public StationEntry update(Integer id, StationEntry stationEntry) {
         StationEntry existing = stationEntryRepo.findById(id)

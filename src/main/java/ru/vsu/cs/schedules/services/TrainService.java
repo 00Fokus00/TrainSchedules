@@ -44,13 +44,13 @@ public class TrainService {
         return trainRepo.findAll(search, pageable);
     }
 
-    @Cacheable(value = "train:byId", key="#id")
+//    @Cacheable(value = "train:byId", key="#id")
     public Train getById(Integer id) {
         return trainRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Train not found: " + id));
     }
 
-    @Cacheable(value = "train:byId", key="#id")
+//    @Cacheable(value = "train:byId", key="#id")
     public Train getByIdLocomotive(Integer id) {
         try {
             return trainRepo.findTrainByLocomotiveId(id);

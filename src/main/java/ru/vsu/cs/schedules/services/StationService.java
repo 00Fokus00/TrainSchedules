@@ -42,7 +42,7 @@ public class StationService {
         }
     }
 
-    @Cacheable(value = "station:byId", key="#id")
+//    @Cacheable(value = "station:byId", key="#id")
     public Station getById(Integer id) {
         return stationRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Station not found: " + id));
@@ -53,7 +53,7 @@ public class StationService {
         return stationRepo.save(station);
     }
 
-    @CacheEvict(value = "station:byId", key = "#id")
+//    @CacheEvict(value = "station:byId", key = "#id")
     @Transactional
     public Station update(Integer id, Station station) {
         Station existing = stationRepo.findById(id)

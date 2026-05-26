@@ -41,7 +41,7 @@ public class LocomotiveService {
         return locomotiveRepo.findAll(spec, pageable);
     }
 
-    @Cacheable(value = "locomotive:byId", key="#id")
+//    @Cacheable(value = "locomotive:byId", key="#id")
     public Locomotive getById(Integer id) {
         return locomotiveRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Locomotive not found: " + id));
@@ -52,7 +52,7 @@ public class LocomotiveService {
         return locomotiveRepo.save(locomotive);
     }
 
-    @CacheEvict(value = "locomotive:byId", key = "#id")
+//    @CacheEvict(value = "locomotive:byId", key = "#id")
     @Transactional
     public Locomotive update(Integer id, Locomotive locomotive) {
         Locomotive existing = locomotiveRepo.findById(id)
